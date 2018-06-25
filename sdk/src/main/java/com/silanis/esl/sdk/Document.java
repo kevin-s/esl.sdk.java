@@ -1,10 +1,9 @@
 package com.silanis.esl.sdk;
 
+import com.google.common.collect.Sets;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>The document class contains data describing pages, signatures and their associated data and layout.</>
@@ -22,7 +21,10 @@ public class Document implements Serializable {
     private byte[] content;
     private String fileName;
     private int index;
+    private int numberOfPages;
     private boolean extract;
+    private Boolean tagged;
+    private Set<String> extractionTypes = Sets.newHashSet();
     private DocumentId id;
     private List<Field> injectedFields = new ArrayList<Field>();
     private List<Field> qrCodes = new ArrayList<Field>();
@@ -115,6 +117,24 @@ public class Document implements Serializable {
     }
 
     /**
+     * <p>Accessor method used to retrieve the number of pages of the document</p>
+     *
+     * @return	the number of pages
+     */
+    public int getNumberOfPages() {
+        return numberOfPages;
+    }
+
+    /**
+     * <p>Accessor method used to specify the number of pages of the document.</p>
+     *
+     * @param numberOfPages	the document signing order
+     */
+    public void setNumberOfPages(int numberOfPages) {
+        this.numberOfPages = numberOfPages;
+    }
+
+    /**
      * 
      * 
      * @param extract
@@ -125,6 +145,22 @@ public class Document implements Serializable {
 
     public boolean isExtract() {
         return extract;
+    }
+
+    public Boolean isTagged() {
+        return tagged;
+    }
+
+    public void setTagged(boolean tagged) {
+        this.tagged = tagged;
+    }
+
+    public Set<String> getExtractionTypes() {
+        return extractionTypes;
+    }
+
+    public void setExtractionTypes(Set<String> extractionTypes) {
+        this.extractionTypes = extractionTypes;
     }
 
     /**

@@ -8,12 +8,13 @@ import com.silanis.esl.sdk.Placeholder;
 import com.silanis.esl.sdk.Signer;
 import com.silanis.esl.sdk.builder.SignerBuilder;
 import com.silanis.esl.sdk.internal.Asserts;
+import java.util.Locale;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Locale;
-
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * User: jessica
@@ -74,7 +75,8 @@ public class SignerConverter {
         }
 
         if ( sdkSigner.getLanguage() != null ) {
-            result.setLanguage(sdkSigner.getLanguage().toString());
+            String languageCountry = sdkSigner.getLanguage().getCountry();
+            result.setLanguage(sdkSigner.getLanguage().getLanguage() + (isNotBlank(languageCountry) ? "-" + languageCountry : EMPTY));
         }
 
         if ( sdkSigner.getId() != null ) {
@@ -137,7 +139,7 @@ public class SignerConverter {
         if(isBlank(lang))
             return new Locale("");
 
-        return LocaleUtils.toLocale(apiSigner.getLanguage());
+        return LocaleUtils.toLocale(apiSigner.getLanguage().replaceAll("-", "_"));
     }
 
     private Signer newSignerPlaceholderFromAPIRole(){
@@ -152,6 +154,10 @@ public class SignerConverter {
 
         if(apiRole.getEmailMessage() != null){
             signerBuilder.withEmailMessage(apiRole.getEmailMessage().getContent());
+        }
+
+        if(apiRole.getIndex() != null){
+            signerBuilder.signingOrder(apiRole.getIndex());
         }
 
         Signer signer = signerBuilder.build();

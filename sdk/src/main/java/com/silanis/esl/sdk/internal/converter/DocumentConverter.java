@@ -7,6 +7,8 @@ import com.silanis.esl.api.model.Approval;
 import com.silanis.esl.api.model.External;
 import com.silanis.esl.api.model.Package;
 import com.silanis.esl.api.model.Role;
+import com.silanis.esl.sdk.Document;
+import com.silanis.esl.sdk.ExtractionType;
 import com.silanis.esl.sdk.Field;
 import com.silanis.esl.sdk.FieldStyle;
 import com.silanis.esl.sdk.GroupId;
@@ -62,7 +64,10 @@ public class DocumentConverter {
 
         documentBuilder.withDescription( apiDocument.getDescription() );
         documentBuilder.withExternal(new ExternalConverter(apiDocument.getExternal()).toSDKExternal());
-        documentBuilder.withData( apiDocument.getData() );
+        for(String extractionType : apiDocument.getExtractionTypes()) {
+            documentBuilder.withExtractionType(ExtractionType.valueOf(extractionType));
+        }
+        documentBuilder.withData(apiDocument.getData() );
         for ( Approval apiApproval : apiDocument.getApprovals() ) {
             documentBuilder.withSignature( new SignatureConverter( apiApproval, apiPackage ).toSDKSignature());
         }
@@ -77,7 +82,16 @@ public class DocumentConverter {
             }
         }
 
-        return documentBuilder.build();
+        Document document = documentBuilder.build();
+        if ( apiDocument.getPages() != null && !apiDocument.getPages().isEmpty() ) {
+            document.setNumberOfPages(apiDocument.getPages().size());
+        }
+
+        if ( apiDocument.getTagged() != null ) {
+            document.setTagged(apiDocument.getTagged());
+        }
+
+        return document;
     }
     /**
      * Convert from SDK document to API Document.
@@ -93,6 +107,7 @@ public class DocumentConverter {
         com.silanis.esl.api.model.Document result = new com.silanis.esl.api.model.Document()
                 .setIndex(sdkDocument.getIndex())
                 .setExtract(sdkDocument.isExtract())
+                .setExtractionTypes(sdkDocument.getExtractionTypes())
                 .setData(sdkDocument.getData())
                 .setName(sdkDocument.getName());
 
@@ -100,6 +115,7 @@ public class DocumentConverter {
             result.safeSetId(sdkDocument.getId().getId());
         }
         result.safeSetDescription(sdkDocument.getDescription());
+        result.safeSetTagged(sdkDocument.isTagged());
 
         if( sdkDocument.getExternal() != null){
             External external =  new ExternalConverter(sdkDocument.getExternal()).toAPIExternal();
@@ -142,6 +158,7 @@ public class DocumentConverter {
         com.silanis.esl.api.model.Document result = new com.silanis.esl.api.model.Document()
                 .safeSetIndex(sdkDocument.getIndex())
                 .safeSetExtract(sdkDocument.isExtract())
+                .setExtractionTypes(sdkDocument.getExtractionTypes())
                 .safeSetName(sdkDocument.getName())
                 .safeSetExternal(new ExternalConverter(sdkDocument.getExternal()).toAPIExternal())
                 .safeSetDescription(sdkDocument.getDescription());

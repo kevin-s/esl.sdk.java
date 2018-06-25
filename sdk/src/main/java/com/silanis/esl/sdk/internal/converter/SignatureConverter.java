@@ -3,8 +3,14 @@ package com.silanis.esl.sdk.internal.converter;
 import com.silanis.esl.api.model.Approval;
 import com.silanis.esl.api.model.Field;
 import com.silanis.esl.api.model.Role;
-import com.silanis.esl.sdk.*;
+import com.silanis.esl.sdk.FieldType;
+import com.silanis.esl.sdk.GroupId;
+import com.silanis.esl.sdk.Placeholder;
+import com.silanis.esl.sdk.Signature;
+import com.silanis.esl.sdk.SignatureId;
 import com.silanis.esl.sdk.builder.SignatureBuilder;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * User: jessica
@@ -97,6 +103,11 @@ public class SignatureConverter {
             }
         }
 
+        if (apiApproval.getOptional()) {
+
+            signatureBuilder.makeOptional();
+        }
+
         Signature signature = signatureBuilder.build();
         if(null != apiApproval.getAccepted())
             signature.setAccepted(apiApproval.getAccepted());
@@ -122,6 +133,12 @@ public class SignatureConverter {
         if(sdkSignature.getId() != null){
             result.setId(sdkSignature.getId().getId());
         }
+
+        if(sdkSignature.getName() != null){
+            result.setName(sdkSignature.getName());
+        }
+
+        result.setOptional(sdkSignature.isOptional());
 
         result.addField(getAPIFieldFromSignature());
 
@@ -156,6 +173,11 @@ public class SignatureConverter {
 
         result.setPage(sdkSignature.getPage());
         result.setExtract(sdkSignature.isExtraction());
+
+        if (sdkSignature.getId() != null && isNotBlank(sdkSignature.getId().getId())) {
+            result.setId(sdkSignature.getId().getId());
+        }
+
         if ( sdkSignature.getName() != null ) {
             result.setName(sdkSignature.getName());
         }

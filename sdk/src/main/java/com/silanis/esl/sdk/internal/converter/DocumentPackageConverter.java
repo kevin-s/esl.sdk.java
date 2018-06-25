@@ -16,11 +16,15 @@ import com.silanis.esl.sdk.SenderInfo;
 import com.silanis.esl.sdk.Signer;
 import com.silanis.esl.sdk.builder.DocumentPackageAttributesBuilder;
 import com.silanis.esl.sdk.builder.PackageBuilder;
-import com.silanis.esl.sdk.builder.SignerBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import static com.silanis.esl.sdk.builder.SignerBuilder.newSignerFromGroup;
+import static com.silanis.esl.sdk.builder.SignerBuilder.newSignerPlaceholder;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * User: jessica
@@ -85,7 +89,8 @@ public class DocumentPackageConverter {
         }
 
         if ( sdkPackage.getLanguage() != null ) {
-            result.setLanguage(sdkPackage.getLanguage().getLanguage());
+            String languageCountry = sdkPackage.getLanguage().getCountry();
+            result.setLanguage(sdkPackage.getLanguage().getLanguage() + (isNotBlank(languageCountry) ? "-" + languageCountry : EMPTY));
         }
 
         if ( sdkPackage.getSettings() != null ) {
@@ -145,6 +150,7 @@ public class DocumentPackageConverter {
 
         for ( Signer signer : sdkPackage.getPlaceholders() ) {
             Role role = new SignerConverter(signer).toAPIRole(signer.getId(), signer.getPlaceholderName());
+            role.setIndex(signer.getSigningOrder());
             result.addRole(role);
         }
 
@@ -186,7 +192,7 @@ public class DocumentPackageConverter {
         }
 
         if (apiPackage.getLanguage() != null) {
-            packageBuilder.withLanguage(new Locale(apiPackage.getLanguage()));
+            packageBuilder.withLanguage(toSdkLanguage(apiPackage.getLanguage()));
         }
 
         if (apiPackage.getSettings() != null) {
@@ -205,10 +211,10 @@ public class DocumentPackageConverter {
         for ( Role role : apiPackage.getRoles() ) {
 
             if(role.getSigners().isEmpty()){
-                packageBuilder.withSigner(SignerBuilder.newSignerPlaceholder(new Placeholder(role.getId(), role.getName())));
+                packageBuilder.withSigner(newSignerPlaceholder(new Placeholder(role.getId(), role.getName(), role.getIndex())));
             }
             else if ( role.getSigners().get( 0 ).getGroup() != null ) {
-                packageBuilder.withSigner(SignerBuilder.newSignerFromGroup(new GroupId(role.getSigners().get(0).getGroup().getId())));
+                packageBuilder.withSigner(newSignerFromGroup(new GroupId(role.getSigners().get(0).getGroup().getId())));
             } else {
                 packageBuilder.withSigner( new SignerConverter(role).toSDKSigner() );
 
@@ -249,6 +255,19 @@ public class DocumentPackageConverter {
         }
 
         return documentPackage;
+    }
+
+    private Locale toSdkLanguage(String apiLanguage) {
+        if(apiLanguage == null)
+            return null;
+
+        String[] strArray = apiLanguage.split("-");
+
+        if(strArray.length == 2) {
+            return new Locale(strArray[0], strArray[1]);
+        } else {
+            return new Locale(strArray[0]);
+        }
     }
 
 }

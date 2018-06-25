@@ -13,7 +13,12 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -40,15 +45,17 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.List;
 
 import static com.silanis.esl.sdk.internal.HttpUtil.percentDecode;
+import static com.silanis.esl.sdk.internal.MimeTypeUtils.getContentTypeByFileName;
 
 public class RestClient {
 
     public static final String CHARSET_UTF_8 = "UTF-8";
     private static final int BUFFER_SIZE = 4096;
 
-    public static final String ESL_API_VERSION = "11.4";
+    public static final String ESL_API_VERSION = "11.15";
     public static final String ESL_API_VERSION_HEADER = "esl-api-version=" + ESL_API_VERSION;
 
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
@@ -161,7 +168,7 @@ public class RestClient {
     }
 
     private ByteArrayBody buildPartForFile(byte[] content, String fileName, String name) {
-        String contentType = MimeTypeUtils.getContentTypeByFileName(fileName);
+        String contentType = getContentTypeByFileName(fileName);
         return new ByteArrayBody(content, ContentType.create(contentType), name);
     }
 

@@ -9,6 +9,8 @@ import com.silanis.esl.sdk.internal.*;
 import com.silanis.esl.sdk.internal.converter.DocumentConverter;
 import com.silanis.esl.sdk.internal.converter.DocumentPackageConverter;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +53,38 @@ public class LayoutService {
             String response = client.post(path, templateString);
             Package aPackage = Serialization.fromJson(response, Package.class);
             return aPackage.getId();
+        } catch (RequestException e) {
+            throw new EslServerException("Could not create layout.", e);
+        } catch (Exception e) {
+            throw new EslException("Could not create layout." + " Exception: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Create and get a layout from an already created DocumentPackage.
+     *
+     * @param layout the DocumentPackage with one document from which to create layout.
+     * @return DocumentPackage layout.
+     */
+    public DocumentPackage createAndGetLayout(DocumentPackage layout) {
+        String path = template.urlFor(UrlTemplate.LAYOUT_PATH)
+                .build();
+
+        Package layoutToCreate = new DocumentPackageConverter(layout).toAPIPackage();
+
+        for (com.silanis.esl.sdk.Document document : layout.getDocuments()) {
+            layoutToCreate.addDocument(new DocumentConverter(document).toAPIDocument(layoutToCreate));
+        }
+
+        String packageString = Serialization.toJson(layoutToCreate);
+        Template template = Serialization.fromJson(packageString, Template.class);
+        template.setId(layout.getId().getId());
+        String templateString = Serialization.toJson(template);
+
+        try {
+            String response = client.post(path, templateString);
+            Package aPackage = Serialization.fromJson(response, Package.class);
+            return new DocumentPackageConverter(aPackage).toSDKPackage();
         } catch (RequestException e) {
             throw new EslServerException("Could not create layout.", e);
         } catch (Exception e) {
@@ -106,6 +140,33 @@ public class LayoutService {
 
         try {
             client.post(path, "");
+        } catch (RequestException e) {
+            throw new EslServerException("Could not apply layout.", e);
+        } catch (Exception e) {
+            throw new EslException("Could not apply layout." + " Exception: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Apply a document layout to a document in a DocumentPackage. Adds fields to signer's signature or if the signer
+     * does not exist, will create placeholders.
+     *
+     * @param packageId  The package id of the DocumentPackage to apply layout.
+     * @param documentId The document id of the document to apply layout.
+     * @param layoutName   The layout name of the layout to apply.
+     */
+    public void applyLayoutByName(PackageId packageId, String documentId, String layoutName) {
+
+        try {
+            String path = template.urlFor(UrlTemplate.APPLY_LAYOUT_BY_NAME_PATH)
+                    .replace("{packageId}", packageId.getId())
+                    .replace("{documentId}", documentId)
+                    .replace("{layoutName}", URLEncoder.encode(layoutName, "UTF-8"))
+                    .build();
+
+            client.post(path, "");
+        } catch (UnsupportedEncodingException e) {
+            throw new EslException("Layout name : '" + layoutName + "' can not be url encoded.", e);
         } catch (RequestException e) {
             throw new EslServerException("Could not apply layout.", e);
         } catch (Exception e) {
